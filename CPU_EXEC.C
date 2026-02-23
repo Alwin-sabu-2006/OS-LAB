@@ -5,16 +5,17 @@ int n;
 int completed=0;
 float fcfsavg_wt=0;
 float srtfavg_wt=0;
-
+float priority_wt=0;
 
 printf("Enter the number of processes:");
 scanf("%d",&n);
-int pid[n],arr[n],compt[n],burst[n],tat[n],wait[n],rt[n];
+int pid[n],arr[n],compt[n],burst[n],tat[n],wait[n],rt[n],is_done[n],priority[n];
 for(int i=0;i<n;i++)
 {
  pid[i]=i+1;
- printf("Enter the arrival time and burst time:");
- scanf("%d%d",&arr[i],&burst[i]);
+ 
+ printf("Enter the arrival time and burst time and priority time:");
+ scanf("%d%d%d",&arr[i],&burst[i],&priority[i]);
  rt[i]=burst[i];
  
 }
@@ -83,6 +84,41 @@ while (completed != n) {
     }
 
     printf("\nThe average waiting time is: %.2f\n", srtfavg_wt);
+    
+ printf("\n Priority");
+ while(completed != n) {
+        int best = -1;
+        for(int i = 0; i < n; i++) {
+            if(arr[i] <= time && is_done[i] == 0) {
+                if(best == -1 || priority[i] < priority[best]) {
+                    best = i;
+                }
+            }
+        }
+if(best == -1) {
+            time++; 
+        } else {
+            
+            compt[best] = time + burst[best];
+            tat[best] = compt[best] - arr[best];
+            wait[best] = tat[best] - burst[best];
+            time = compt[best]; 
+            is_done[best] = 1;
+            completed++;
+        }
+    }
+
+    float total_waiting = 0;
+    printf("\nPID\tPRIO\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        total_wait += wait[i];
+        priority_wt=total_waiting / n;
+        
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+               pid[i], priority[i], arr[i], burst[i], compt[i], tat[i], wait[i]);
+    }
+
+    printf("\nAverage Waiting Time: %.2f\n", priority_wt);   
  return 0;
  }   
     
