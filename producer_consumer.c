@@ -1,64 +1,70 @@
 #include <stdio.h>
 
-int readcount = 0;
-int writecount = 0;
+#define SIZE 2
 
-int mutex = 1;      // controls readcount
-int resource = 1;   // shared resource
-int readTry = 1;    // used to block readers when writer comes
+int buffer[SIZE];
+int in = 0, out = 0;
+
+int mutex = 1;
+int empty = SIZE;
+int full = 0;
 
 void wait(int *s)
 {
-    while(*s <= 0);   // wait
-    (*s)--;           // enter
+    while(*s <= 0);
+    (*s)--;
 }
 
 void signal(int *s)
 {
-    (*s)++;           // leave
+    (*s)++;
 }
 
-void reader(int id)
+void producer(int id, int item)
 {
-    wait(&readTry);       // check if writer waiting
-    wait(&mutex);
-    readcount++;
+    if(empty == 0)
+        printf("Producer %d waiting, buffer FULL\n", id);
 
-    if(readcount == 1)
-        wait(&resource);  // first reader locks resource
+    wait(&empty);
+    wait(&mutex);
+
+    buffer[in] = item;
+    printf("Producer %d produced item %d\n", id, item);
+
+    in = (in + 1) % SIZE;
 
     signal(&mutex);
-    signal(&readTry);
-
-    printf("Reader %d is reading\n", id);
-
-    wait(&mutex);
-    readcount--;
-
-    if(readcount == 0)
-        signal(&resource); // last reader releases resource
-
-    signal(&mutex);
+    signal(&full);
 }
 
-void writer(int id)
+void consumer(int id)
 {
-    wait(&readTry);      // block readers
-    wait(&resource);     // get resource
+    if(full == 0)
+        printf("Consumer %d waiting, buffer EMPTY\n", id);
 
-    printf("Writer %d is writing\n", id);
+    wait(&full);
+    wait(&mutex);
 
-    signal(&resource);
-    signal(&readTry);    // allow readers again
+    int item = buffer[out];
+    printf("Consumer %d consumed item %d\n", id, item);
+
+    out = (out + 1) % SIZE;
+
+    signal(&mutex);
+    signal(&empty);
 }
 
 int main()
 {
-    reader(1);
-    reader(2);
-    writer(1);
-    reader(3);
-    writer(2);
+    consumer(1);   // shows waiting
+
+    producer(1, 10);
+    producer(2, 20);
+
+    producer(3, 30);  // shows buffer full waiting
+
+    consumer(2);
+    consumer(3);
 
     return 0;
 }
