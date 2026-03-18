@@ -9,59 +9,48 @@ int mutex = 1;
 int empty = SIZE;
 int full = 0;
 
-void wait(int *s)
-{
-    while(*s <= 0);
-    (*s)--;
-}
-
-void signal(int *s)
-{
-    (*s)++;
-}
-
 void producer(int id, int item)
 {
     if(empty == 0)
+    {
         printf("Producer %d waiting, buffer FULL\n", id);
+        return;
+    }
 
-    wait(&empty);
-    wait(&mutex);
-
+    empty--;
     buffer[in] = item;
-    printf("Producer %d produced item %d\n", id, item);
+
+    printf("Producer %d produced\n", id);
 
     in = (in + 1) % SIZE;
-
-    signal(&mutex);
-    signal(&full);
+    full++;
 }
 
 void consumer(int id)
 {
     if(full == 0)
+    {
         printf("Consumer %d waiting, buffer EMPTY\n", id);
+        return;
+    }
 
-    wait(&full);
-    wait(&mutex);
-
+    full--;
     int item = buffer[out];
-    printf("Consumer %d consumed item %d\n", id, item);
+
+    printf("Consumer %d consumed\n", id);
 
     out = (out + 1) % SIZE;
-
-    signal(&mutex);
-    signal(&empty);
+    empty++;
 }
 
 int main()
 {
-    consumer(1);   // shows waiting
+    consumer(1);
 
     producer(1, 10);
     producer(2, 20);
 
-    producer(3, 30);  // shows buffer full waiting
+    producer(3, 30);
 
     consumer(2);
     consumer(3);
