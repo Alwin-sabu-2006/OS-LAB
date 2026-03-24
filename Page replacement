@@ -1,0 +1,129 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Check if page exists
+int found(int frame[], int f, int page) {
+    for (int i = 0; i < f; i++)
+        if (frame[i] == page)
+            return 1;
+    return 0;
+}
+
+// FIFO
+int fifo(int ref[], int n, int f) {
+    int frame[10], faults = 0, index = 0;
+
+    for (int i = 0; i < f; i++)
+        frame[i] = -1;
+
+    for (int i = 0; i < n; i++) {
+        if (!found(frame, f, ref[i])) {
+            frame[index] = ref[i];
+            index = (index + 1) % f;
+            faults++;
+        }
+    }
+    return faults;
+}
+
+// LRU
+int lru(int ref[], int n, int f) {
+    int frame[10], time[10], faults = 0, count = 0;
+
+    for (int i = 0; i < f; i++) {
+        frame[i] = -1;
+        time[i] = 0;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int flag = 0;
+
+        for (int j = 0; j < f; j++) {
+            if (frame[j] == ref[i]) {
+                time[j] = ++count;
+                flag = 1;
+                break;
+            }
+        }
+
+        if (!flag) {
+            int min = 0;
+            for (int j = 1; j < f; j++)
+                if (time[j] < time[min])
+                    min = j;
+
+            frame[min] = ref[i];
+            time[min] = ++count;
+            faults++;
+        }
+    }
+    return faults;
+}
+
+// Optimal
+int optimal(int ref[], int n, int f) {
+    int frame[10], faults = 0;
+
+    for (int i = 0; i < f; i++)
+        frame[i] = -1;
+
+    for (int i = 0; i < n; i++) {
+
+        if (found(frame, f, ref[i]))
+            continue;
+
+        int pos = -1, far = i + 1;
+
+        for (int j = 0; j < f; j++) {
+            int k;
+            for (k = i + 1; k < n; k++) {
+                if (frame[j] == ref[k])
+                    break;
+            }
+
+            if (k > far) {
+                far = k;
+                pos = j;
+            }
+
+            if (k == n) {
+                pos = j;
+                break;
+            }
+        }
+
+        if (pos == -1)
+            pos = 0;
+
+        frame[pos] = ref[i];
+        faults++;
+    }
+    return faults;
+}
+
+// Main
+int main() {
+    int n, f, ref[50];
+
+    printf("Enter length of reference string: ");
+    scanf("%d", &n);
+
+    printf("Enter number of frames (1-7): ");
+    scanf("%d", &f);
+
+    srand(time(0));
+
+    printf("\nReference String:\n");
+    for (int i = 0; i < n; i++) {
+        ref[i] = rand() % 10;
+        printf("%d ", ref[i]);
+    }
+
+    printf("\n\nPage Faults:\n");
+    printf("FIFO   = %d\n", fifo(ref, n, f));
+    printf("LRU    = %d\n", lru(ref, n, f));
+    printf("Optimal= %d\n", optimal(ref, n, f));
+
+    return 0;
+}
