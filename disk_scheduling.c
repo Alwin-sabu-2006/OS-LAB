@@ -11,7 +11,7 @@ void sort(int a[], int size) {
                 int t = a[i];
                 a[i] = a[j];
                 a[j] = t;
-            }
+            }                                                                                                                                                                                                                                                                                                           
         }
     }
 }
